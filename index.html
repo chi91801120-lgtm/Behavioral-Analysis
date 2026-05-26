@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>學生意圖翻譯機</title>
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #F7F7F5;
+        color: #1F2937;
+        line-height: 1.6;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px 80px;
+    }
+
+    h1 {
+        font-size: 2.2rem;
+        margin-bottom: 6px;
+    }
+
+    .subtitle {
+        color: #6B7280;
+        margin-bottom: 30px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 6px 24px rgba(0,0,0,0.05);
+    }
+
+    textarea {
+        width: 100%;
+        min-height: 120px;
+        border: 1px solid #E5E7EB;
+        border-radius: 14px;
+        padding: 16px;
+        font-size: 1rem;
+        resize: vertical;
+        outline: none;
+    }
+
+    textarea:focus {
+        border-color: #374151;
+    }
+
+    .section-title {
+        font-weight: 700;
+        margin-bottom: 12px;
+        font-size: 1rem;
+    }
+
+    .tag-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .tag {
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid #D1D5DB;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.95rem;
+    }
+
+    .tag:hover {
+        background: #F3F4F6;
+    }
+
+    .tag.active {
+        background: #1F2937;
+        color: white;
+        border-color: #1F2937;
+    }
+
+    button.main-btn {
+        width: 100%;
+        border: none;
+        background: #1F2937;
+        color: white;
+        font-size: 1.05rem;
+        padding: 18px;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-weight: 600;
+    }
+
+    button.main-btn:hover {
+        opacity: 0.92;
+    }
+
+    .result-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .result-box {
+        background: #FAFAFA;
+        border-radius: 16px;
+        padding: 18px;
+        border: 1px solid #E5E7EB;
+    }
+
+    .label {
+        font-size: 0.9rem;
+        color: #6B7280;
+        margin-bottom: 8px;
+        font-weight: 600;
+    }
+
+    .response {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .risk {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-weight: 700;
+    }
+
+    .green { background: #DCFCE7; }
+    .yellow { background: #FEF3C7; }
+    .orange { background: #FED7AA; }
+    .red { background: #FECACA; }
+
+    .copy-btn {
+        margin-top: 14px;
+        border: none;
+        background: #E5E7EB;
+        padding: 10px 14px;
+        border-radius: 12px;
+        cursor: pointer;
+    }
+
+    .crisis-box {
+        border: 2px solid #FCA5A5;
+        background: #FEF2F2;
+    }
+
+    footer {
+        text-align: center;
+        color: #9CA3AF;
+        margin-top: 40px;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 640px) {
+        h1 {
+            font-size: 1.8rem;
+        }
+
+        .container {
+            padding: 24px 14px 60px;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>學生意圖翻譯機</h1>
+    <div class="subtitle">
+        協助特教老師理解行為背後的需求
+    </div>
+
+    <div class="card">
+
+        <div class="section-title">學生行為描述</div>
+
+        <textarea id="behaviorInput" placeholder="例如：學生突然摔筆並拒絕寫數學作業"></textarea>
+
+        <br><br>
+
+        <div class="section-title">環境因素（可複選）</div>
+
+        <div class="tag-group" id="environmentTags">
+            <div class="tag">工作太難</div>
+            <div class="tag">太吵</div>
+            <div class="tag">被糾正</div>
+            <div class="tag">活動轉換</div>
+            <div class="tag">同學影響</div>
+            <div class="tag">下課前</div>
+            <div class="tag">被要求上台</div>
+            <div class="tag">等待太久</div>
+        </div>
+
+        <br>
+
+        <div class="section-title">快捷行為</div>
+
+        <div class="tag-group" id="quickTags">
+            <div class="tag">拒寫</div>
+            <div class="tag">趴睡</div>
+            <div class="tag">摔東西</div>
+            <div class="tag">插話</div>
+            <div class="tag">暴怒</div>
+            <div class="tag">離座</div>
+            <div class="tag">尖叫</div>
+            <div class="tag">發呆</div>
+            <div class="tag">躲避互動</div>
+        </div>
+
+        <br>
+
+        <button class="main-btn" onclick="analyzeBehavior()">
+            翻譯學生意圖
+        </button>
+
+    </div>
+
+    <div id="results"></div>
+
+    <footer>
+        特教現場行為解讀工具
+    </footer>
+
+</div>
+
+<script>
+
+const rules = [
+
+{
+    keywords: ["拒寫", "不寫", "逃避"],
+    intents: ["避免失敗", "缺乏安全感", "長期挫敗"],
+    risk: "🟡 情緒失衡",
+    riskClass: "yellow",
+    response: "我先陪你把第一步變簡單，不用一次完成。",
+    strategies: [
+        "拆小任務",
+        "降低要求",
+        "提供選擇感"
+    ],
+    avoid: [
+        "當眾糾正",
+        "立刻講道理"
+    ],
+    record: "學生於課堂中出現拒寫行為，可能與工作難度及挫敗感有關。教師透過降低要求與分段協助後，學生情緒逐漸穩定。"
+},
+
+{
+    keywords: ["摔", "暴怒", "尖叫"],
+    intents: ["情緒求救", "爭取控制感", "缺乏安全感"],
+    risk: "🔴 危機狀態",
+    riskClass: "red",
+    response: "我先陪你穩定下來，現在不用急著處理事情。",
+    strategies: [
+        "降低刺激",
+        "減少語言量",
+        "保留退出空間"
+    ],
+    avoid: [
+        "情緒對撞",
+        "強迫立刻道歉"
+    ],
+    record: "學生於課堂中出現高強度情緒反應，可能與壓力累積及控制感不足有關。教師先協助降刺激並維持安全。"
+},
+
+{
+    keywords: ["趴睡", "發呆"],
+    intents: ["感官 overload", "逃避壓力", "長期疲累"],
+    risk: "🟠 長期挫敗",
+    riskClass: "orange",
+    response: "你可以先休息一下，我們等等一起從簡單的開始。",
+    strategies: [
+        "降低刺激",
+        "提供短暫休息",
+        "重新建立可完成感"
+    ],
+    avoid: [
+        "羞辱式叫醒",
+        "公開批評"
+    ],
+    record: "學生於課堂中出現低參與及退縮行為，可能與疲累或感官負荷有關。"
+},
+
+{
+    keywords: ["插話", "離座"],
+    intents: ["尋求注意", "爭取控制感", "社交焦慮"],
+    risk: "🟢 一般測試界線",
+    riskClass: "green",
+    response: "我有注意到你，等一下會給你發言機會。",
+    strategies: [
+        "提前給角色感",
+        "增加可預測性",
+        "提供明確規則"
+    ],
+    avoid: [
+        "當眾羞辱",
+        "權力對抗"
+    ],
+    record: "學生於課堂中出現插話及離座行為，可能與注意需求及控制感需求有關。"
+},
+
+{
+    keywords: ["躲避互動"],
+    intents: ["社交焦慮", "缺乏安全感", "情緒退縮"],
+    risk: "🟡 情緒失衡",
+    riskClass: "yellow",
+    response: "你現在可以不用馬上回應，我會陪你慢慢來。",
+    strategies: [
+        "降低社交壓力",
+        "給等待時間",
+        "減少強迫互動"
+    ],
+    avoid: [
+        "逼迫回應",
+        "公開點名"
+    ],
+    record: "學生於互動情境中出現退縮與逃避行為，可能與安全感不足有關。"
+}
+
+];
+
+document.querySelectorAll('#environmentTags .tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+        tag.classList.toggle('active');
+    });
+});
+
+document.querySelectorAll('#quickTags .tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+        const textarea = document.getElementById('behaviorInput');
+        textarea.value += textarea.value ? '、' + tag.innerText : tag.innerText;
+    });
+});
+
+function analyzeBehavior() {
+
+    const input = document.getElementById('behaviorInput').value.trim();
+
+    if (!input) {
+        alert('請輸入學生行為');
+        return;
+    }
+
+    let matched = null;
+
+    for (const rule of rules) {
+        for (const keyword of rule.keywords) {
+            if (input.includes(keyword)) {
+                matched = rule;
+                break;
+            }
+        }
+        if (matched) break;
+    }
+
+    if (!matched) {
+        matched = {
+            intents: ["情緒求救", "缺乏安全感", "避免失敗"],
+            risk: "🟡 情緒失衡",
+            riskClass: "yellow",
+            response: "我有注意到你現在有點辛苦，我們先一起把狀況穩定下來。",
+            strategies: ["降低刺激", "先建立安全感", "避免過度要求"],
+            avoid: ["情緒對撞", "立刻追問原因"],
+            record: "學生於課堂中出現情緒與行為反應，教師持續觀察並提供支持。"
+        };
+    }
+
+    let crisisSection = '';
+
+    if (matched.risk.includes('🔴')) {
+        crisisSection = `
+        <div class="result-box crisis-box">
+            <div class="label">⚠ 危機優先事項</div>
+            <ul>
+                <li>先維持安全</li>
+                <li>降低刺激</li>
+                <li>減少語言量</li>
+                <li>避免圍觀</li>
+                <li>保留退出空間</li>
+            </ul>
+        </div>
+        `;
+    }
+
+    document.getElementById('results').innerHTML = `
+        <div class="card">
+
+            <div class="result-grid">
+
+                <div class="result-box">
+                    <div class="label">🧠 可能意圖（前三種）</div>
+                    <ol>
+                        ${matched.intents.map(i => `<li>${i}</li>`).join('')}
+                    </ol>
+                </div>
+
+                <div class="result-box">
+                    <div class="label">🚦 風險等級</div>
+                    <div class="risk ${matched.riskClass}">
+                        ${matched.risk}
+                    </div>
+                </div>
+
+                <div class="result-box">
+                    <div class="label">💬 下一句可以說</div>
+                    <div class="response">「${matched.response}」</div>
+
+                    <button class="copy-btn" onclick="copyText('${matched.response}')">
+                        📋 複製這句話
+                    </button>
+                </div>
+
+                <div class="result-box">
+                    <div class="label">🛠 建議策略</div>
+                    <ul>
+                        ${matched.strategies.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="result-box">
+                    <div class="label">🚫 不建議</div>
+                    <ul>
+                        ${matched.avoid.map(a => `<li>${a}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="result-box">
+                    <div class="label">📝 教師紀錄格式</div>
+                    <div>${matched.record}</div>
+
+                    <button class="copy-btn" onclick="copyText('${matched.record}')">
+                        📋 複製紀錄
+                    </button>
+                </div>
+
+                ${crisisSection}
+
+            </div>
+
+        </div>
+    `;
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text);
+    alert('已複製');
+}
+
+</script>
+
+</body>
+</html>
